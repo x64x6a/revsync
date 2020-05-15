@@ -4,6 +4,7 @@ from idc import *
 from idautils import *
 
 import hashlib
+import sys
 import traceback
 
 from client import Client
@@ -72,17 +73,26 @@ def onmsg(key, data, replay=False):
         cmd, user = data['cmd'], data['user']
         if cmd == 'comment':
             print('revsync: <%s> %s %#x %s' % (user, cmd, ea, data['text']))
-            text = comments.set(ea, user, str(data['text']), ts)
+            if sys.version_info.major == 2:
+                text = comments.set(ea, user, data['text'].encode('utf8'), ts)
+            else:
+                text = comments.set(ea, user, str(data['text']), ts)
             set_cmt(ea, text, 0)
         elif cmd == 'extra_comment':
             print('revsync: <%s> %s %#x %s' % (user, cmd, ea, data['text']))
-            text = comments_extra.set(ea, user, str(data['text']), ts)
+            if sys.version_info.major == 2:
+                text = comments_extra.set(ea, user, data['text'].encode('utf8'), ts)
+            else:
+                text = comments_extra.set(ea, user, str(data['text']), ts)
             set_cmt(ea, text, 1)
         elif cmd == 'area_comment':
             print('revsync: <%s> %s %s %s' % (user, cmd, data['range'], data['text']))
         elif cmd == 'rename':
             print('revsync: <%s> %s %#x %s' % (user, cmd, ea, data['text']))
-            set_name(ea, str(data['text']))
+            if sys.version_info.major == 2:
+                set_name(ea, data['text'].encode('ascii', 'replace'))
+            else:
+                set_name(ea, str(data['text']))
         elif cmd == 'join':
             print('revsync: <%s> joined' % (user))
         elif cmd in ['stackvar_renamed', 'struc_created', 'struc_deleted',
